@@ -1,0 +1,28 @@
+{
+  "RequestMaxNum": 1,
+  "Project": [
+    {
+      "appid": "",
+      "secretKey": "",
+      "bizid": "",
+      "game": ""
+    },
+    {
+      "appid": "",
+      "secretKey": "",
+      "bizid": "",
+      "game": ""
+    }
+  ],
+  "Logger": {
+    "filepath": "/tmp/fcm.log"
+  },
+  "Redis": {
+    "IsCluster": false,
+    "HostList": [
+      ""
+    ],
+    "Password": "",
+    "DB": 0
+  }
+}
