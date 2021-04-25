@@ -18,5 +18,5 @@ var (
 )
 
 func GetRdbKey(gn string, bizid string) string {
-	return gn + rdbLinkKey + "addiction-fail-subscribe-machao2"
+	return gn + rdbLinkKey + "addiction-loginorlogout-subscribe"
 }
