@@ -47,7 +47,7 @@ func NewPushRequest(project types.ProjectType, wg *sync.WaitGroup, signalChan ch
 /**
 上传数据
 */
-func (p *pushRequest) PushAction() {
+func (p *pushRequest) PushAction(taskCode string) {
 	p.logger.AddBase("gn", p.project.Game)
 	p.logger.Info(fmt.Sprintf("start Project :%v", p.project.Game))
 	defer p.wg.Done()
@@ -71,7 +71,7 @@ func (p *pushRequest) PushAction() {
 		var result fcm.Result
 		var err error
 		if global.DEBUG {
-			result, err = p.fcm.TestLoginOrOut(behaviorList, "")
+			result, err = p.fcm.TestLoginOrOut(behaviorList, taskCode)
 		} else {
 			result, err = p.fcm.LoginOrOut(behaviorList)
 		}
