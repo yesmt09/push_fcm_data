@@ -59,8 +59,8 @@ type Result struct {
 }
 
 // constructor
-func NewFcm(appId, bizId, key string) *Fcm {
-	fcm := &Fcm{
+func NewFcm(appId, bizId, key string) Fcm {
+	fcm := Fcm{
 		AppID: appId,
 		BizID: bizId,
 		Key:   key,
@@ -187,11 +187,22 @@ func (f *Fcm) request(method, uri string, b interface{}, header http.Header) (Re
 	if err != nil {
 		return Result{}, err
 	}
+	var v interface{}
+	json.Unmarshal(jsonBody, &v)
 	requestData, err := f.makeBody(jsonBody)
 	if err != nil {
 		return Result{}, err
 	}
-	raw := `{"data":"` + strings.TrimRight(requestData, "=") + `"}`
+	var raw string
+	switch b.(type) {
+	case *[]Behavior:
+		raw = `{"data":"` + strings.TrimRight(requestData, "=") + `"}`
+		break
+	case *Query:
+	case *Check:
+	default:
+		raw = strings.TrimRight(requestData, "=")
+	}
 	header["sign"] = []string{f.makeSign(header.Clone(), raw, nil)}
 	req, err := http.NewRequest(method, uri, bytes.NewReader([]byte(raw)))
 	if err != nil {
@@ -199,9 +210,10 @@ func (f *Fcm) request(method, uri string, b interface{}, header http.Header) (Re
 	}
 	req.Header = header
 	response, err := f.client.Do(req)
+
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK || err != nil {
-		return Result{}, err
+		return Result{}, errors.New(response.Status)
 	}
 	body, _ := ioutil.ReadAll(response.Body)
 	responseData := Result{}

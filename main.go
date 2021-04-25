@@ -23,6 +23,7 @@ func main() {
 	if global.DEBUG {
 		global.ConfigFilePath = "config.debug.json"
 		global.Config.Logger.Level = blogger.L_DEBUG
+		fmt.Println("debug mode runing...")
 	} else {
 		global.ConfigFilePath = "config.json"
 		global.Config.Logger.Level = blogger.L_INFO
@@ -49,6 +50,7 @@ func main() {
 
 	defer func() {
 		fmt.Println("end")
+		global.Logger.Info("end")
 	}()
 	for _, v := range wgall {
 		v.Wait()

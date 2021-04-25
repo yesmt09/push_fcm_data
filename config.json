@@ -1,12 +1,6 @@
 {
-  "RequestMaxNum": 1,
+  "RequestMaxNum": 5,
   "Project": [
-    {
-      "appid": "",
-      "secretKey": "",
-      "bizid": "",
-      "game": ""
-    },
     {
       "appid": "",
       "secretKey": "",
@@ -20,9 +14,8 @@
   "Redis": {
     "IsCluster": false,
     "HostList": [
-      ""
+      "192.168.2.178:6379"
     ],
-    "Password": "",
-    "DB": 0
+    "Password": ""
   }
 }

@@ -30,5 +30,8 @@ func InitConfig() {
 	}
 	global.Logger = blogger.NewBlogger(global.Config.Logger.Filepath, global.Config.Logger.Level)
 	ctx := context.Background()
-	global.Rdb.Ping(ctx)
+	_, err := global.Rdb.Ping(ctx).Result()
+	if err != nil {
+		panic("redis connect err")
+	}
 }

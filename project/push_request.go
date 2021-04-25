@@ -8,6 +8,7 @@ import (
 	"time"
 	"upload_fcm_data/fcm"
 	"upload_fcm_data/global"
+	"upload_fcm_data/helper"
 	"upload_fcm_data/types"
 )
 
@@ -19,7 +20,7 @@ type pushRequest struct {
 	mu           sync.Mutex
 	wg           *sync.WaitGroup
 	behaviorList *[]fcm.Behavior
-	fcm          *fcm.Fcm
+	fcm          fcm.Fcm
 	signalChan   chan bool
 }
 
@@ -27,6 +28,12 @@ type pushRequest struct {
 新建类对象
 */
 func NewPushRequest(project types.ProjectType, wg *sync.WaitGroup, signalChan chan bool) pushRequest {
+
+	helper.CheckParameter(project.Game)
+	helper.CheckParameter(project.Bizid)
+	helper.CheckParameter(project.Appid)
+	helper.CheckParameter(project.SecretKey)
+
 	log := blogger.NewBlogger(global.Config.Logger.Filepath, global.Config.Logger.Level)
 	return pushRequest{
 		logger:       &log,
@@ -45,9 +52,9 @@ func NewPushRequest(project types.ProjectType, wg *sync.WaitGroup, signalChan ch
 func (p *pushRequest) PushAction() {
 	p.logger.AddBase("gn", p.project.Game)
 	p.logger.Info(fmt.Sprintf("start Project :%v", p.project.Game))
-	p.logger.Flush()
 	defer p.wg.Done()
 	for {
+		p.logger.Flush()
 		select {
 		case <-p.signalChan:
 			fmt.Println("exit")
@@ -59,9 +66,7 @@ func (p *pushRequest) PushAction() {
 		p.behaviorList = p.getFcmBehaviorList()
 		p.mu.Unlock()
 		if len(*p.behaviorList) == 0 {
-			p.logger.Info("list empty")
 			time.Sleep(time.Second * 5)
-			p.logger.Flush()
 			continue
 		}
 		p.logger.Info(fmt.Sprintf("push list %v", p.behaviorList))
@@ -74,10 +79,10 @@ func (p *pushRequest) PushAction() {
 			result, err = p.fcm.LoginOrOut(p.behaviorList)
 		}
 		if err != nil {
-			fmt.Println(result)
+			p.logger.Fatal(err)
 			continue
 		}
-		p.logger.Info(result.Data)
-		p.logger.Flush()
+		time.Sleep(time.Second * 10)
+		p.logger.Info(result)
 	}
 }

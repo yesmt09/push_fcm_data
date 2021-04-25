@@ -23,5 +23,5 @@ type ProjectType struct {
 	SecretKey string
 	Appid     string
 	Bizid     string
-	Game        string
+	Game      string
 }

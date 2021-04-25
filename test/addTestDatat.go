@@ -26,7 +26,7 @@ func main() {
 	global.ConfigFilePath = "../config.debug.json"
 	initialize.InitConfig()
 	var wg sync.WaitGroup
-	fmt.Println("start")
+	fmt.Println("start add data")
 
 	listKey := global.GetRdbKey(gn, bizid)
 	piArr := [...]string{
