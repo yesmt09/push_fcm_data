@@ -16,11 +16,16 @@ var wgall []*sync.WaitGroup
 var signalList []chan bool
 
 func main() {
-	flag.BoolVar(&global.DEBUG, "debug", false, "")
+	var taskCode string
+	flag.BoolVar(&global.DEBUG, "debug", false, "debug mode")
+	flag.StringVar(&taskCode, "testcode", "", "test code")
 	flag.Parse()
 	signal.Notify(global.Signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	if global.DEBUG {
+		if taskCode == "" {
+			panic("debug mode must need testcode flag")
+		}
 		global.ConfigFilePath = "config.debug.json"
 		global.Config.Logger.Level = blogger.L_DEBUG
 		fmt.Println("debug mode runing...")
@@ -39,7 +44,7 @@ func main() {
 		wg.Add(1)
 		projectConfig := v
 		pushRequest := project.NewPushRequest(projectConfig, &wg, signalChan)
-		go pushRequest.PushAction()
+		go pushRequest.PushAction(taskCode)
 	}
 	select {
 	case <-global.Signal:
