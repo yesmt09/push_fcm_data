@@ -41,6 +41,10 @@ type Query struct {
 	Ai string `json:"ai"`
 }
 
+type Collections struct {
+	Collections []Behavior `json:"collections"`
+}
+
 // login or logout
 type Behavior struct {
 	No int    `json:"no"`
@@ -118,19 +122,21 @@ func (f *Fcm) TestQuery(q *Query, testCode string) (Result, error) {
 }
 
 // login or logout
-func (f *Fcm) LoginOrOut(b *[]Behavior) (Result, error) {
+func (f *Fcm) LoginOrOut(b []Behavior) (Result, error) {
+	var collections = Collections{Collections: b}
 	url := "http://api2.wlc.nppa.gov.cn/behavior/collection/loginout"
 	header := f.getHeader()
 	header["Content-Type"] = []string{"application/json; charset=utf-8"}
-	return f.request("POST", url, b, header)
+	return f.request("POST", url, collections, header)
 }
 
 // test login or logout
-func (f *Fcm) TestLoginOrOut(q *[]Behavior, testCode string) (Result, error) {
+func (f *Fcm) TestLoginOrOut(q []Behavior, testCode string) (Result, error) {
+	var collections = Collections{Collections: q}
 	uri := "https://wlc.nppa.gov.cn/test/collection/loginout/" + testCode
 	header := f.getHeader()
 	header["Content-Type"] = []string{"application/json; charset=utf-8"}
-	return f.request("POST", uri, q, header)
+	return f.request("POST", uri, collections, header)
 }
 
 // aes-128-gcm + base64
@@ -195,7 +201,7 @@ func (f *Fcm) request(method, uri string, b interface{}, header http.Header) (Re
 	}
 	var raw string
 	switch b.(type) {
-	case *[]Behavior:
+	case Collections:
 		raw = `{"data":"` + strings.TrimRight(requestData, "=") + `"}`
 		break
 	case *Query:
@@ -211,17 +217,21 @@ func (f *Fcm) request(method, uri string, b interface{}, header http.Header) (Re
 	req.Header = header
 	response, err := f.client.Do(req)
 
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK || err != nil {
+	if err != nil {
+		return Result{}, err
+	}
+
+	if response.StatusCode != http.StatusOK {
 		return Result{}, errors.New(response.Status)
 	}
+	defer response.Body.Close()
 	body, _ := ioutil.ReadAll(response.Body)
 	responseData := Result{}
 	err = json.Unmarshal(body, &responseData)
 	if err != nil {
 		return Result{}, err
 	}
-	if responseData.ErrCode != 0 || responseData.ErrMsg != "ok" {
+	if responseData.ErrCode != 0 || responseData.ErrMsg != "OK" {
 		return responseData, errors.New(responseData.ErrMsg)
 	}
 	return responseData, nil

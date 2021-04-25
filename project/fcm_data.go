@@ -8,7 +8,7 @@ import (
 	"upload_fcm_data/global"
 )
 
-func (p pushRequest) getFcmBehaviorList() *[]fcm.Behavior {
+func (p pushRequest) getFcmBehaviorList() []fcm.Behavior {
 	cacheKey := global.GetRdbKey(p.project.Game, p.project.Bizid)
 	var behaviorList = make([]fcm.Behavior, 0)
 	for i := 1; i <= global.Config.RequestMaxNum; i++ {
@@ -46,5 +46,5 @@ func (p pushRequest) getFcmBehaviorList() *[]fcm.Behavior {
 			Pi: rdbData["pi"].(string),
 		})
 	}
-	return &behaviorList
+	return behaviorList
 }

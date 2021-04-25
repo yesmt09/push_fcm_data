@@ -15,13 +15,12 @@ import (
 var ctx = context.Background()
 
 type pushRequest struct {
-	logger       *blogger.BLogger
-	project      types.ProjectType
-	mu           sync.Mutex
-	wg           *sync.WaitGroup
-	behaviorList *[]fcm.Behavior
-	fcm          fcm.Fcm
-	signalChan   chan bool
+	logger     *blogger.BLogger
+	project    types.ProjectType
+	mu         sync.Mutex
+	wg         *sync.WaitGroup
+	fcm        fcm.Fcm
+	signalChan chan bool
 }
 
 /**
@@ -36,13 +35,12 @@ func NewPushRequest(project types.ProjectType, wg *sync.WaitGroup, signalChan ch
 
 	log := blogger.NewBlogger(global.Config.Logger.Filepath, global.Config.Logger.Level)
 	return pushRequest{
-		logger:       &log,
-		project:      project,
-		wg:           wg,
-		mu:           sync.Mutex{},
-		behaviorList: &[]fcm.Behavior{},
-		fcm:          fcm.NewFcm(project.Appid, project.Bizid, project.SecretKey),
-		signalChan:   signalChan,
+		logger:     &log,
+		project:    project,
+		wg:         wg,
+		mu:         sync.Mutex{},
+		fcm:        fcm.NewFcm(project.Appid, project.Bizid, project.SecretKey),
+		signalChan: signalChan,
 	}
 }
 
@@ -63,26 +61,24 @@ func (p *pushRequest) PushAction() {
 			break
 		}
 		p.mu.Lock()
-		p.behaviorList = p.getFcmBehaviorList()
+		behaviorList := p.getFcmBehaviorList()
 		p.mu.Unlock()
-		if len(*p.behaviorList) == 0 {
+		if len(behaviorList) == 0 {
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		p.logger.Info(fmt.Sprintf("push list %v", p.behaviorList))
-
+		p.logger.Info(fmt.Sprintf("push list %v", behaviorList))
 		var result fcm.Result
 		var err error
 		if global.DEBUG {
-			result, err = p.fcm.TestLoginOrOut(p.behaviorList, "")
+			result, err = p.fcm.TestLoginOrOut(behaviorList, "")
 		} else {
-			result, err = p.fcm.LoginOrOut(p.behaviorList)
+			result, err = p.fcm.LoginOrOut(behaviorList)
 		}
 		if err != nil {
 			p.logger.Fatal(err)
 			continue
 		}
-		time.Sleep(time.Second * 10)
 		p.logger.Info(result)
 	}
 }
