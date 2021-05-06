@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"gitlab.babeltime.com/packagist/blogger"
 	"sync"
@@ -15,7 +16,7 @@ import (
 var ctx = context.Background()
 
 type pushRequest struct {
-	logger     *blogger.BLogger
+	Logger     *blogger.BLogger
 	project    types.ProjectType
 	mu         sync.Mutex
 	wg         *sync.WaitGroup
@@ -35,7 +36,7 @@ func NewPushRequest(project types.ProjectType, wg *sync.WaitGroup, signalChan ch
 
 	log := blogger.NewBlogger(global.Config.Logger.Filepath, global.Config.Logger.Level)
 	return pushRequest{
-		logger:     &log,
+		Logger:     &log,
 		project:    project,
 		wg:         wg,
 		mu:         sync.Mutex{},
@@ -48,11 +49,10 @@ func NewPushRequest(project types.ProjectType, wg *sync.WaitGroup, signalChan ch
 上传数据
 */
 func (p *pushRequest) PushAction(taskCode string) {
-	p.logger.AddBase("gn", p.project.Game)
-	p.logger.Info(fmt.Sprintf("start Project :%v", p.project.Game))
+	p.Logger.Info(fmt.Sprintf("start Project :%v", p.project.Game))
 	defer p.wg.Done()
 	for {
-		p.logger.Flush()
+		p.Logger.Flush()
 		select {
 		case <-p.signalChan:
 			fmt.Println("exit")
@@ -67,7 +67,6 @@ func (p *pushRequest) PushAction(taskCode string) {
 			time.Sleep(time.Second * 5)
 			continue
 		}
-		p.logger.Info(fmt.Sprintf("push list %v", behaviorList))
 		var result fcm.Result
 		var err error
 		if global.DEBUG {
@@ -76,9 +75,47 @@ func (p *pushRequest) PushAction(taskCode string) {
 			result, err = p.fcm.LoginOrOut(behaviorList)
 		}
 		if err != nil {
-			p.logger.Fatal(err)
+			jsonFailBehaviorList, _ := json.Marshal(behaviorList)
+			global.Rdb.LPush(context.Background(), global.GetFailRdbKey(p.project.Game, p.project.Bizid), jsonFailBehaviorList)
+			p.Logger.Fatal(err)
 			continue
 		}
-		p.logger.Info(result)
+		p.Logger.Info(result)
+	}
+}
+
+func (p *pushRequest) PushFailList(taskCode string)  {
+	p.Logger.Info(fmt.Sprintf("start Project :%v", p.project.Game))
+	defer p.wg.Done()
+	for {
+		p.Logger.Flush()
+		select {
+		case <-p.signalChan:
+			fmt.Println("exit")
+			return
+		default:
+			break
+		}
+		p.mu.Lock()
+		behaviorFailList := p.getFcmFailBehaviorList()
+		p.mu.Unlock()
+		if len(behaviorFailList) == 0 {
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		var result fcm.Result
+		var err error
+		if global.DEBUG {
+			result, err = p.fcm.TestLoginOrOut(behaviorFailList, taskCode)
+		} else {
+			result, err = p.fcm.LoginOrOut(behaviorFailList)
+		}
+		if err != nil {
+			jsonFailBehaviorList, _ := json.Marshal(behaviorFailList)
+			global.Rdb.LPush(context.Background(), global.GetFailRdbKey(p.project.Game, p.project.Bizid), jsonFailBehaviorList)
+			p.Logger.Fatal(err)
+			continue
+		}
+		p.Logger.Info(result)
 	}
 }

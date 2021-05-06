@@ -1,5 +1,5 @@
 {
-  "RequestMaxNum": 5,
+  "RequestMaxNum": 128,
   "Project": [
     {
       "appid": "",
@@ -12,9 +12,12 @@
     "filepath": "/tmp/fcm.log"
   },
   "Redis": {
-    "IsCluster": false,
+    "IsCluster": true,
     "HostList": [
-      "192.168.2.178:6379"
+      "",
+      "",
+      "",
+      ""
     ],
     "Password": ""
   }

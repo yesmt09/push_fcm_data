@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"gitlab.babeltime.com/packagist/blogger"
 	"os"
+	"time"
 	"upload_fcm_data/global"
 )
 
@@ -21,11 +22,15 @@ func InitConfig() {
 		global.Rdb = redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs:    global.Config.Redis.HostList,
 			Password: global.Config.Redis.Password,
+			PoolTimeout: 4 * time.Second,
+			PoolSize: 100,
 		})
 	} else {
 		global.Rdb = redis.NewClient(&redis.Options{
 			Addr:     global.Config.Redis.HostList[0],
 			Password: global.Config.Redis.Password,
+			PoolTimeout: 4 * time.Second,
+			PoolSize: 100,
 		})
 	}
 	global.Logger = blogger.NewBlogger(global.Config.Logger.Filepath, global.Config.Logger.Level)

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/panjf2000/ants/v2"
 	"math/rand"
-	"runtime"
 	"sync"
 	"time"
 	"upload_fcm_data/global"
@@ -21,8 +20,8 @@ var bizid string
 var randNum int
 
 func main() {
-	flag.StringVar(&gn, "gn", "sg2", "")
-	flag.StringVar(&bizid, "bizid", "1199000720", "")
+	flag.StringVar(&gn, "gn", "", "")
+	flag.StringVar(&bizid, "bizid", "", "")
 	flag.IntVar(&randNum, "randnum", 1000, "")
 	flag.Parse()
 	global.ConfigFilePath = "../config.debug.json"
@@ -102,5 +101,4 @@ func pushTestData() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(runtime.NumGoroutine())
 }

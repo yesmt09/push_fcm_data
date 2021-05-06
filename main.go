@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/pkg/profile"
 	"gitlab.babeltime.com/packagist/blogger"
 	"os/signal"
 	"sync"
@@ -23,6 +24,7 @@ func main() {
 	signal.Notify(global.Signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	if global.DEBUG {
+		defer profile.Start().Stop()
 		if taskCode == "" {
 			panic("debug mode must need testcode flag")
 		}
@@ -41,10 +43,13 @@ func main() {
 		wgall = append(wgall, &wg)
 		signalChan := make(chan bool, 1)
 		signalList = append(signalList, signalChan)
-		wg.Add(1)
+		wg.Add(2)
 		projectConfig := v
 		pushRequest := project.NewPushRequest(projectConfig, &wg, signalChan)
+		pushRequest.Logger.AddBase("gn", projectConfig.Game)
+
 		go pushRequest.PushAction(taskCode)
+		go pushRequest.PushFailList(taskCode)
 	}
 	select {
 	case <-global.Signal:

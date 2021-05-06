@@ -8,6 +8,21 @@ import (
 	"upload_fcm_data/global"
 )
 
+func (p pushRequest) getFcmFailBehaviorList() (behaviorList []fcm.Behavior) {
+	cacheKey := global.GetFailRdbKey(p.project.Game, p.project.Bizid)
+	var data string
+	var err error
+	data, err = global.Rdb.RPop(ctx, cacheKey).Result()
+	if redis.Nil == err {
+		p.Logger.Info("data is empty")
+	} else if nil != err {
+		p.Logger.Info(err)
+		panic(err)
+	}
+	_ = json.Unmarshal([]byte(data), &behaviorList)
+	return
+}
+
 func (p pushRequest) getFcmBehaviorList() []fcm.Behavior {
 	cacheKey := global.GetRdbKey(p.project.Game, p.project.Bizid)
 	var behaviorList = make([]fcm.Behavior, 0)
@@ -16,10 +31,10 @@ func (p pushRequest) getFcmBehaviorList() []fcm.Behavior {
 		var err error
 		data, err = global.Rdb.RPop(ctx, cacheKey).Result()
 		if redis.Nil == err {
-			p.logger.Info("data is empty")
+			p.Logger.Info("data is empty")
 			break
 		} else if nil != err {
-			p.logger.Warning("err")
+			p.Logger.Info(err)
 			panic(err)
 		}
 		// 整理数据
@@ -27,7 +42,7 @@ func (p pushRequest) getFcmBehaviorList() []fcm.Behavior {
 		err = json.Unmarshal([]byte(data), &rdbData)
 
 		if err != nil {
-			p.logger.Warning("json err")
+			p.Logger.Warning("json err")
 			continue
 		}
 		var ot int64
